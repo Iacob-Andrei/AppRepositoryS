@@ -96,7 +96,7 @@ int main ()
 			{
 				/* s-a realizat conexiunea, se astepta mesajul */
 				bzero (msg, 100);
-				//fflush (stdout);
+				fflush (stdout);
 				int funct = 0;
 
 				/* citirea mesajului */
@@ -130,7 +130,7 @@ int main ()
 					}			
 
 					bzero (msg, 100);
-					//fflush (stdout);
+					fflush (stdout);
 
 					if (read (client, msg, 100) <= 0)
 					{
@@ -166,7 +166,7 @@ int main ()
 					}			
 
 					bzero (msg, 100);
-					//fflush (stdout);
+					fflush (stdout);
 
 					if (read (client, msg, 100) <= 0)
 					{
@@ -186,11 +186,6 @@ int main ()
 						continue;		/* continuam sa ascultam */
 					}
 				}
-				else 
-				{
-					// comanda gresita
-				}
-				printf("/n");
 			}
 		}	// convorbire copil - client
 

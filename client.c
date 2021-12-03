@@ -56,9 +56,9 @@ int main (int argc, char *argv[])
 
 
   printf("\nIntroduceti cifra corespunzatoare comnenzii pe care doriti sa o folositi: \n");
-  printf("1 - adaugare de aplicatie in baza de date.\n");
-  printf("2 - cautare de aplicatie in baza de date. \n");
-  printf("3 - inchidere sesiune client. \n\n");
+  printf("[1] adaugare de aplicatie in baza de date.\n");
+  printf("[2] cautare de aplicatie in baza de date. \n");
+  printf("[3] inchidere sesiune client. \n\n");
 
 
   // BUCLA WHILE PANA LA FINAL
@@ -80,40 +80,46 @@ int main (int argc, char *argv[])
       return 0;
     }
 
-
-    /* trimiterea mesajului la server */
-    if (write (sd, &funct, sizeof(int)) <= 0)
+    if( funct == 1 || funct ==2 )
     {
-        perror ("[client]Eroare la write() spre server.\n");
-        return errno;
-    }
+      /* trimiterea mesajului la server */
+      if (write (sd, &funct, sizeof(int)) <= 0)
+      {
+          perror ("[client]Eroare la write() spre server.\n");
+          return errno;
+      }
 
-    /* citirea raspunsului dat de server 
-      (apel blocant pina cand serverul raspunde) */
-    if (read (sd, msg, 100) < 0)
-    {
-        perror ("[client]Eroare la read() de la server.\n");
-        return errno;
-    }
-    /* afisam mesajul primit */
-    printf ("[client]Mesajul primit este: \n[server]%s\n", msg);
+      /* citirea raspunsului dat de server 
+        (apel blocant pina cand serverul raspunde) */
+      if (read (sd, msg, 100) < 0)
+      {
+          perror ("[client]Eroare la read() de la server.\n");
+          return errno;
+      }
+      /* afisam mesajul primit */
+      printf ("[client]Mesajul primit este: \n[server]%s\n", msg);
 
-    bzero (msg, 100);
-    printf ("[client]Introduceti specificatiile aici: ");
-    fflush (stdout);
-    read (0, msg, 100);
+      bzero (msg, 100);
+      printf ("[client]Introduceti specificatiile aici: ");
+      fflush (stdout);
+      read (0, msg, 100);
 
-    if (write (sd, msg, 100) <= 0)
-    {
-        perror ("[client]Eroare la write() spre server.\n");
-        return errno;
+      if (write (sd, msg, 100) <= 0)
+      {
+          perror ("[client]Eroare la write() spre server.\n");
+          return errno;
+      }
+      if (read (sd, msg, 100) < 0)
+      {
+          perror ("[client]Eroare la read() de la server.\n");
+          return errno;
+      }
+      printf ("[client]Mesajul primit este: \n[server]%s\n\n", msg);
     }
-    if (read (sd, msg, 100) < 0)
+    else
     {
-        perror ("[client]Eroare la read() de la server.\n");
-        return errno;
+      printf("Comanda eronata!\n\n");
     }
-    printf ("[client]Mesajul primit este: \n[server]%s\n\n", msg);
   }
 
   /* inchidem conexiunea, am terminat */
