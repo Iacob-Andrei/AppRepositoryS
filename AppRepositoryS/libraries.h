@@ -44,7 +44,7 @@ string receive_msg( int fd )
 {
     int length;
     char mesaj_chr[100000];
-    //mesaj_chr[0] = 0;
+    bzero(mesaj_chr,100000);
 
     read ( fd, &length, sizeof(int));
     read ( fd, mesaj_chr, length );

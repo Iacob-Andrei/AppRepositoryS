@@ -66,8 +66,7 @@ int main (int argc, char *argv[])
       close (sd);
       return 0;
     }
-
-    if( funct == 1 || funct ==2 )
+    else if( funct == 1 )     // adaugare
     {
       send_integer( funct , sd );
       msg.clear();
@@ -77,12 +76,40 @@ int main (int argc, char *argv[])
       msg.clear();
 
       cout << "[client]Introduceti specificatiile aici: ";
+
+
+      // to do - sa introduc aici cin pentru a lua inf despre adaugare
       getline( cin , msg );
+
+
       send_msg( msg , sd );
       msg.clear();
 
       msg = receive_msg( sd );
       cout << "[client]Mesajul primit este: \n[server]" << msg << endl;
+    }
+    else if( funct == 2 )   // cautare
+    {
+      send_integer( funct , sd );
+      msg.clear();
+
+      msg = receive_msg( sd );
+      cout << "[client]Mesajul primit este: \n[server]" << msg << endl;
+      fflush(stdout);
+      msg.clear();
+
+      cout << "[client]Introduceti specificatiile aici: \n";
+
+      string cautare = read_for_search();
+      if( cautare.empty() == 1 )
+        cautare = "-";
+      cout << cautare << endl;
+
+      send_msg( cautare , sd );
+      msg.clear();
+
+      msg = receive_msg( sd );
+      cout << "[client]Am primit urmatoarele aplicatii: \n\n" << msg << endl;
     }
     else
     {

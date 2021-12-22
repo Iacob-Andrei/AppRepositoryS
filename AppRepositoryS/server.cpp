@@ -26,7 +26,7 @@ int main ()
 
 	struct sockaddr_in server;	// structura folosita de server
 	struct sockaddr_in from;	
-	string msg;		//mesajul primit de la client 
+	string msg, sql;		//mesajul primit de la client 
 	int sd;			//descriptorul de socket 
 
 
@@ -95,7 +95,6 @@ int main ()
 			while(1)
 			{
 				msg.clear();
-				//fflush (stdout);
 				int funct = 0;
 
 				/* citirea mesajului */
@@ -107,10 +106,13 @@ int main ()
 				}
 			
 				cout << "[server]Am primit comanda nr: " << funct << endl;
+				fflush(stdout);
+
 				if( funct == 3 )
 				{
 					cout << "[server]Conexiune terminata.\n";
 					close (client);
+					sqlite3_close (db);
 					exit(1);
 				}
 				else if( funct == 1 ) // clientul doreste sa ADAUGE o aplicatie
@@ -122,6 +124,10 @@ int main ()
 
 					msg.clear();
 
+					// to do - primesc intai nume si developer 
+					// verific daca exista deja - in functie de asta trimit mesaj inapoi
+					// daca exista - intreb daca vrea sa adauge alte versiuni
+					// daca nu exista - cer in continuare specificatii
 					msg = receive_msg(client);
 
 					cout << "[server]Am primit specificatiile: " << msg << endl;
@@ -139,14 +145,17 @@ int main ()
 					send_msg( msg , client );			
 
 					msg.clear();
-
 					msg = receive_msg(client);
 
-					cout << "[server]Am primit specificatiile: " << msg;
+					//cout << "[server]Am primit specificatiile: \n" << msg << endl;
+					sql.clear();
+					if(msg != "-" )
+						sql =   "SELECT * FROM AppRepository LEFT JOIN OS_Version USING(id_app) LEFT JOIN hardware_req USING(id_app) WHERE " + msg + " ;";
+					else
+						sql =   "SELECT * FROM AppRepository Left JOIN OS_Version USING(id_app) left JOIN hardware_req USING(id_app);";
 
 					msg.clear();
-					msg = "Rezultate pentru cautare....";
-
+					msg = select_sql( sql , db );
 					send_msg(msg , client );
 				}
 			}
