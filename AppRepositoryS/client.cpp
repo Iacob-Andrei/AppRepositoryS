@@ -7,7 +7,7 @@ int main (int argc, char *argv[])
 {
   int sd;			// descriptorul de socket
   struct sockaddr_in server;	// structura folosita pentru conectare 
-  string msg;		// mesajul trimis
+  string msg, msg2;		// mesajul trimis
   int funct;
   char msg_receive[100000];
 
@@ -50,7 +50,6 @@ int main (int argc, char *argv[])
 
   while(1)
   {
-    /* citirea mesajului */
     cout << "[client]Introduceti numarul comenzii: ";
     cin >> funct;
     cin.ignore();       // flush the new line chr out of the buffer
@@ -75,15 +74,22 @@ int main (int argc, char *argv[])
       cout << "[client]Mesajul primit este: \n[server]" << msg << endl;
       msg.clear();
 
-      cout << "[client]Introduceti specificatiile aici: ";
+      cout << "[client]Introduceti specificatiile aici:\n";
 
-
-      // to do - sa introduc aici cin pentru a lua inf despre adaugare
-      getline( cin , msg );
-
+      msg = read_for_apprepo();
+      //cout << msg;
 
       send_msg( msg , sd );
       msg.clear();
+
+      //to do - vezi ce raspuns primesti
+      // 1 - intrebi daca vrea sa mai adauge versiuni
+      // 2 - intrebii in continuare pentru celelalte doua tabele
+
+
+    // receive
+
+    // if
 
       msg = receive_msg( sd );
       cout << "[client]Mesajul primit este: \n[server]" << msg << endl;

@@ -153,7 +153,8 @@ string return_id_app( string conditie_select , sqlite3* db)
     return id_app;
 } 
 
-tuple<string,string> read_for_apprepo()
+//tuple<string,string> read_for_apprepo()
+string read_for_apprepo()
 {
     string cauta, insert, buff;
 
@@ -162,7 +163,7 @@ tuple<string,string> read_for_apprepo()
         getline(cin,buff);
         if(buff.empty() == 0)
         {
-            insert = insert + "\"" + buff + "\"";
+            //insert = insert + "\"" + buff + "\"";
             cauta = cauta + "name = \"" + buff + "\"";
         }
     }while(buff.empty() != 0 );
@@ -173,12 +174,13 @@ tuple<string,string> read_for_apprepo()
         getline(cin,buff);
         if( buff.empty() == 0 )
         {
-            insert = insert + ",\""+ buff + "\"";
+            //insert = insert + ",\""+ buff + "\"";
             cauta = cauta + " AND manufacturer = \"" + buff + "\"";
         }
     }while( buff.empty() != 0 );
 
-    return make_tuple(cauta,insert);
+    //return make_tuple(cauta,insert);
+    return cauta;
 }
 
 tuple<string,string> read_for_os()

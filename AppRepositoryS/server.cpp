@@ -130,7 +130,14 @@ int main ()
 					// daca nu exista - cer in continuare specificatii
 					msg = receive_msg(client);
 
-					cout << "[server]Am primit specificatiile: " << msg << endl;
+					// rulez sql cu specificatiile din msg
+					// trimit raspuns inapoi
+
+					// if - 1 	daca exista, intreb ce vrea sa faca
+					//				bucla daca vrea sa adauge alte versiuni
+					//				inchid daca nu vrea
+					//		2 continui sa cer informatii pentru celelalte doua tabele
+
 
 					msg.clear();
 					msg = "Aplicatie adaugata cu succes.";
