@@ -18,7 +18,6 @@
 extern int errno;
 using namespace std;
 
-
 void send_integer( int value , int fd )
 {
     if ( write (fd, &value, sizeof(int)) <= 0)
@@ -59,18 +58,13 @@ static int callback(void* str, int argc, char** argv, char** azColName)
     char* data = (char*) str;
     for (i = 0; i < argc; i++) 
     {
-        strcat(data, azColName[i]);
-        strcat(data, "=");
-
         if(argv[i])
         {
+            strcat(data, azColName[i]);
+            strcat(data, "=");
             strcat(data, argv[i]);
+            strcat(data,"\n");
         }
-        else
-        {
-            strcat(data,"-");
-        }
-        strcat(data,"\n");
     }
 
     strcat(data, "\n");
@@ -153,8 +147,7 @@ string return_id_app( string conditie_select , sqlite3* db)
     return id_app;
 } 
 
-//tuple<string,string> read_for_apprepo()
-string read_for_apprepo()
+tuple<string,string> read_for_apprepo()
 {
     string cauta, insert, buff;
 
@@ -163,7 +156,7 @@ string read_for_apprepo()
         getline(cin,buff);
         if(buff.empty() == 0)
         {
-            //insert = insert + "\"" + buff + "\"";
+            insert = insert + "\"" + buff + "\"";
             cauta = cauta + "name = \"" + buff + "\"";
         }
     }while(buff.empty() != 0 );
@@ -174,13 +167,12 @@ string read_for_apprepo()
         getline(cin,buff);
         if( buff.empty() == 0 )
         {
-            //insert = insert + ",\""+ buff + "\"";
+            insert = insert + ",\""+ buff + "\"";
             cauta = cauta + " AND manufacturer = \"" + buff + "\"";
         }
     }while( buff.empty() != 0 );
 
-    //return make_tuple(cauta,insert);
-    return cauta;
+    return make_tuple(cauta,insert);
 }
 
 tuple<string,string> read_for_os()
@@ -376,7 +368,7 @@ string read_for_search()
         {
             cautare.append(" AND ");
         }
-        cautare = cautare + "(min_storage <= " + buffmsg + "OR min_storage IS NULL)";
+        cautare = cautare + "(min_storage <= " + buffmsg + " OR min_storage IS NULL)";
         count_arg++;
     }
 
@@ -408,4 +400,95 @@ string read_for_search()
 
 
     return cautare;
+}
+
+int send_file_to_client( int fd , string id_app , sqlite3* db )
+{
+    string sql = "SELECT kit_install FROM OS_Version WHERE id_kit = " + id_app + ";";
+    int pos;
+    string filename;
+    filename.clear();
+    filename = select_sql( sql , db );
+
+    pos = filename.find("=");
+    filename = filename.substr(pos + 1);
+    filename[filename.length() - 1] = '\0';
+
+    pos = filename.find(".");
+    string extensie = filename.substr(pos + 1);
+    string name_for_client;
+    name_for_client = id_app + "." + extensie;
+
+    send_msg( name_for_client , fd );
+
+    FILE *fp;
+    fp = fopen(filename.c_str(), "rb");
+
+    if(fp == NULL)
+    {
+        perror("[-]Error in reading file.");
+        exit(1);
+    }
+
+    while(1)
+    {
+        unsigned char buff[1024]={0};
+        int nread = fread(buff,1,1024,fp);
+
+        if( nread > 0 )
+        {
+            write( fd , buff , nread );
+        }
+
+        if( nread < 1024 )
+        {
+            if( feof(fp) )
+            {
+                break;
+            }
+            if(ferror(fp))
+            {
+                return 0;
+            }        
+        }
+    }
+
+    fclose(fp);
+    return 1;
+}
+
+int receive_file_from_server( int fd )
+{
+    string name_app;
+
+    name_app.clear();
+    name_app = receive_msg( fd );
+
+    FILE *fp;
+    fp = fopen( name_app.c_str() , "ab" );
+
+    if(NULL == fp)
+    {
+        return 0;
+    }
+
+    int bytesReceived = 0;
+    char recvBuff[1024];
+    bzero(recvBuff , 1024 );
+
+    while ( (bytesReceived = read(fd, recvBuff, 1024)) > 0 )
+    {
+        fwrite(recvBuff, 1, bytesReceived, fp);
+        if(bytesReceived < 1024)
+            break;
+    }
+
+    if(bytesReceived < 0)
+    {
+        return 0;
+    }
+
+    fclose(fp);
+
+    return 1;
 }

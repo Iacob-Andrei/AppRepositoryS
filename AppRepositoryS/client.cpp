@@ -7,7 +7,7 @@ int main (int argc, char *argv[])
 {
   int sd;			// descriptorul de socket
   struct sockaddr_in server;	// structura folosita pentru conectare 
-  string msg, msg2;		// mesajul trimis
+  string msg, msg2, alegere;		// mesajul trimis
   int funct;
   char msg_receive[100000];
 
@@ -73,26 +73,108 @@ int main (int argc, char *argv[])
       msg = receive_msg( sd );
       cout << "[client]Mesajul primit este: \n[server]" << msg << endl;
       msg.clear();
-
+      msg2.clear();
       cout << "[client]Introduceti specificatiile aici:\n";
 
-      msg = read_for_apprepo();
-      //cout << msg;
+      tie(msg, msg2) = read_for_apprepo();
 
       send_msg( msg , sd );
+      send_msg( msg2 , sd );
       msg.clear();
-
-      //to do - vezi ce raspuns primesti
-      // 1 - intrebi daca vrea sa mai adauge versiuni
-      // 2 - intrebii in continuare pentru celelalte doua tabele
-
-
-    // receive
-
-    // if
+      msg2.clear();
 
       msg = receive_msg( sd );
-      cout << "[client]Mesajul primit este: \n[server]" << msg << endl;
+
+      if( msg == "exista" )   // exista deja aplicatia, intreb daca vrea sa introduca alta versiune
+      {
+        msg.clear();
+        cout << "Exista deja aceasta aplicatie in repository. Doriti sa adaugati o versiune noua?[da/nu]";
+        getline( cin , msg );
+
+        send_msg( msg , sd );
+        if( msg == "da" )
+        {
+          do{
+            msg.clear();
+            msg2.clear();
+            tie( msg, msg2 ) = read_for_os();
+            if( msg.empty() == 1 )
+            {
+              msg == "-";
+              msg2 == "-";
+              alegere = "nu";
+
+              send_msg ( msg , sd );
+              send_msg ( msg2, sd );
+              break;
+            }
+            send_msg ( msg , sd );
+            send_msg ( msg2, sd );
+            // to do - add kit install
+
+            cout << endl << "Doriti sa mai adaugati si alte versiuni?[da/nu]";
+            alegere.clear();
+            getline( cin, alegere );
+
+            send_msg ( alegere , sd );
+          }while( alegere == "da" );
+        }
+      }
+      else                    // nu exista aplicatia, cer celelalte date pentru 2 tabele
+      {
+        msg.clear();
+        msg2.clear();
+
+        cout << endl;
+        fflush(stdout);
+
+        tie( msg, msg2 ) = read_for_req();
+
+        if( msg.empty() == 1 )
+        {
+          msg == "-";
+          msg2 == "-";
+        }
+
+        send_msg ( msg , sd );
+        send_msg ( msg2, sd );
+
+
+        alegere.clear();
+        cout << endl << "Doriti sa adaugati si versiuni?[da/nu]";
+        getline( cin , alegere );
+
+        send_msg ( alegere , sd );
+
+        if( alegere == "da" )
+        {
+          do{
+            msg.clear();
+            msg2.clear();
+            tie( msg, msg2 ) = read_for_os();
+            if( msg.empty() == 1 )
+            {
+              msg == "-";
+              msg2 == "-";
+              alegere = "nu";
+
+              send_msg ( msg , sd );
+              send_msg ( msg2, sd );
+              break;
+            }
+            send_msg ( msg , sd );
+            send_msg ( msg2, sd );
+            // to do - add kit install
+
+            cout << endl << "Doriti sa mai adaugati si alte versiuni?[da/nu]";
+            alegere.clear();
+            getline( cin, alegere );
+
+            send_msg ( alegere , sd );
+          }while( alegere == "da" );
+        }
+
+      }
     }
     else if( funct == 2 )   // cautare
     {
@@ -116,6 +198,31 @@ int main (int argc, char *argv[])
 
       msg = receive_msg( sd );
       cout << "[client]Am primit urmatoarele aplicatii: \n\n" << msg << endl;
+
+      cout << endl << "[client]Doriti sa descarcati si un kit de instalare?\n";
+      cout << "Daca da, introduceti id_kit dorit, altfel [nu]:";
+      fflush(stdout);
+
+      alegere.clear();
+      getline( cin , alegere );
+      if( alegere.empty() == 1 )
+        alegere = "nu";
+
+      send_msg( alegere , sd );
+
+      if( alegere != "nu" )
+      {
+        if( receive_file_from_server( sd ) == 1 )
+        {
+          cout << "[client]Fisier primit cu succes!\n";
+          fflush(stdout);
+        }
+        else
+        {
+          cout << "[client]Eroare la fisier!\n";
+          fflush(stdout);
+        }
+      }
     }
     else
     {

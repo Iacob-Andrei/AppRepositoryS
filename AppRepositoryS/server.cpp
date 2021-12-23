@@ -26,7 +26,7 @@ int main ()
 
 	struct sockaddr_in server;	// structura folosita de server
 	struct sockaddr_in from;	
-	string msg, sql;		//mesajul primit de la client 
+	string msg, msg2, sql, sql2, copy_msg, id_app, alegere;		//mesajul primit de la client 
 	int sd;			//descriptorul de socket 
 
 
@@ -121,28 +121,121 @@ int main ()
 					msg = "Astept mai multe informatii pentru adaugarea aplicatiei. ";
 				
 					send_msg(msg, client);		
-
 					msg.clear();
+					msg2.clear();
 
-					// to do - primesc intai nume si developer 
-					// verific daca exista deja - in functie de asta trimit mesaj inapoi
-					// daca exista - intreb daca vrea sa adauge alte versiuni
-					// daca nu exista - cer in continuare specificatii
 					msg = receive_msg(client);
+					msg2 = receive_msg(client);
+					sql.clear();
+					sql  = "SELECT * FROM AppRepository WHERE " + msg + ";";
+					sql2 = "INSERT INTO AppRepository(name, manufacturer) VALUES(" + msg2 + ");";
 
-					// rulez sql cu specificatiile din msg
-					// trimit raspuns inapoi
+					copy_msg = msg;
+					msg = select_sql( sql , db );
 
-					// if - 1 	daca exista, intreb ce vrea sa faca
-					//				bucla daca vrea sa adauge alte versiuni
-					//				inchid daca nu vrea
-					//		2 continui sa cer informatii pentru celelalte doua tabele
+					if( msg.empty() == 0 )		// exista deja o aplicatie cu acel nume si developer
+					{
+						msg.clear();
+						msg = "exista";
+						send_msg( msg , client );
+
+						msg.clear();
+						msg = receive_msg(client);
+
+						if( msg == "da" )
+						{
+							sql2.clear();
+							id_app.clear();
+							sql2 = "SELECT id_app FROM AppRepository WHERE " + copy_msg + ";";
+							id_app = return_id_app( sql2 , db );
+
+							do{
+								msg.clear();
+								msg2.clear();
+								
+								msg = receive_msg( client );
+								msg2 = receive_msg( client );
+
+								if( msg == "-" )
+								{
+									break;
+								}
+								// to do - receive kit install
+
+								msg = "id_app," + msg;
+								msg2 = id_app + "," + msg2;
+								sql.clear();
+								sql = "INSERT INTO OS_Version(" + msg + ") VALUES(" + msg2 + ");";
+								insert_sql( sql , db );
+
+								alegere.clear();
+								alegere = receive_msg( client );
+							}while( alegere == "da" );
 
 
-					msg.clear();
-					msg = "Aplicatie adaugata cu succes.";
+						}
+					}
+					else						// nu exista nicio aplicatie asa, cer restul inf
+					{
+						insert_sql( sql2 , db );
 
-					send_msg( msg , client );
+						sql2.clear();
+						id_app.clear();
+						sql2 = "SELECT id_app FROM AppRepository WHERE " + copy_msg + ";";
+						id_app = return_id_app( sql2 , db );
+
+						msg.clear();
+						msg = "nu exista";
+						send_msg( msg , client );
+
+						msg.clear();
+						msg2.clear();
+
+						msg = receive_msg( client );
+						msg2 = receive_msg( client );
+
+						if( msg != "-" )		// am primit specificatii pentru req
+						{
+							msg = "id_app," + msg;
+							msg2 = id_app + "," + msg2;
+							sql.clear();
+							sql = "INSERT INTO hardware_req(" + msg + ") VALUES(" + msg2 + ");";
+
+							insert_sql( sql , db );
+						}
+
+						msg.clear();
+						msg2.clear();
+						alegere.clear();
+
+						alegere = receive_msg ( client );
+
+						if( alegere == "da" )
+						{
+							do{
+								msg.clear();
+								msg2.clear();
+								
+								msg = receive_msg( client );
+								msg2 = receive_msg( client );
+
+								if( msg == "-" )
+								{
+									break;
+								}
+								// to do - receive kit install
+
+								msg = "id_app," + msg;
+								msg2 = id_app + "," + msg2;
+								sql.clear();
+								sql = "INSERT INTO OS_Version(" + msg + ") VALUES(" + msg2 + ");";
+								insert_sql( sql , db );
+
+								alegere.clear();
+								alegere = receive_msg( client );
+							}while( alegere == "da" );
+						}
+					}
 				}
 				else if( funct == 2 ) // clientul doreste sa CAUTE o aplicatie
 				{
@@ -154,7 +247,6 @@ int main ()
 					msg.clear();
 					msg = receive_msg(client);
 
-					//cout << "[server]Am primit specificatiile: \n" << msg << endl;
 					sql.clear();
 					if(msg != "-" )
 						sql =   "SELECT * FROM AppRepository LEFT JOIN OS_Version USING(id_app) LEFT JOIN hardware_req USING(id_app) WHERE " + msg + " ;";
@@ -164,6 +256,23 @@ int main ()
 					msg.clear();
 					msg = select_sql( sql , db );
 					send_msg(msg , client );
+
+
+					alegere.clear();
+					alegere = receive_msg( client );
+
+					if( alegere != "nu" )
+					{
+						if( send_file_to_client( client , alegere , db ) == 0 )
+						{
+							cout << "[server]eroare la trimitere fisier\n";
+							fflush(stdout);
+						}
+						else{
+							cout << "[server]Fisier trimis cu succes!\n";
+							fflush(stdout);
+						}
+					}
 				}
 			}
 		}	// convorbire copil - client
