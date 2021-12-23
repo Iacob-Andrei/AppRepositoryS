@@ -20,8 +20,8 @@ int main ()
 
 	struct sockaddr_in server;	// structura folosita de server
 	struct sockaddr_in from;	
-	string msg, msg2, sql, sql2, copy_msg, id_app, id_kit, alegere, msg3;		//mesajul primit de la client 
-	int sd;			//descriptorul de socket 
+	string msg, msg2, msg3, sql, copy_msg, sql2, id_app, id_kit, alegere, path;		
+	int sd;						//descriptorul de socket 
 
 
 	/* crearea unui socket */
@@ -42,6 +42,13 @@ int main ()
 	server.sin_addr.s_addr = htonl (INADDR_ANY);
 	/* utilizam un port utilizator */
 	server.sin_port = htons (PORT);
+
+	int enable = 1;
+	if (setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
+	{
+		cout << "eroare\n";
+		return 0;
+	}
 
 	/* atasam socketul */
 	if (bind (sd, (struct sockaddr *) &server, sizeof (struct sockaddr)) == -1)
@@ -160,7 +167,6 @@ int main ()
 
 								if( msg3 != "nu")
 								{
-									string path;
 									path.clear();
 									path =  receive_file_from_client( client , db );
 
@@ -195,8 +201,6 @@ int main ()
 									alegere = receive_msg( client );
 								}
 							}while( alegere == "da" );
-
-
 						}
 					}
 					else						// nu exista nicio aplicatie asa, cer restul inf
@@ -247,16 +251,46 @@ int main ()
 								{
 									break;
 								}
-								// to do - receive kit install
 
-								msg = "id_app," + msg;
-								msg2 = id_app + "," + msg2;
-								sql.clear();
-								sql = "INSERT INTO OS_Version(" + msg + ") VALUES(" + msg2 + ");";
-								insert_sql( sql , db );
+								msg3.clear();
+								msg3 = receive_msg( client );
 
-								alegere.clear();
-								alegere = receive_msg( client );
+								if( msg3 != "nu" )
+								{
+									path.clear();
+									path =  receive_file_from_client( client , db );
+
+									if( path != "-" )
+									{
+										id_kit.clear();
+										id_kit = return_max_id_kit(db);
+										msg = "id_app," + msg + " , id_kit , kit_install ";
+										msg2 = id_app + "," + msg2 + "," + id_kit + ", \"" + path +"\""; 
+										sql.clear();
+										sql = "INSERT INTO OS_Version(" + msg + ") VALUES(" + msg2 + ");";
+										insert_sql( sql , db );
+
+										alegere.clear();
+										alegere = receive_msg( client );
+									}
+									else
+									{
+										alegere.clear();
+										alegere = receive_msg( client );
+									}
+
+								}
+								else
+								{
+									msg = "id_app," + msg;
+									msg2 = id_app + "," + msg2;
+									sql.clear();
+									sql = "INSERT INTO OS_Version(" + msg + ") VALUES(" + msg2 + ");";
+									insert_sql( sql , db );
+
+									alegere.clear();
+									alegere = receive_msg( client );
+								}
 							}while( alegere == "da" );
 						}
 					}

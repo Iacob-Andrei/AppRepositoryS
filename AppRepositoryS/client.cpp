@@ -2,20 +2,18 @@
 
 int main (int argc, char *argv[])
 {
-  int sd;			                // descriptorul de socket
+  int sd;			                
   struct sockaddr_in server;	// structura folosita pentru conectare 
-  string msg, msg2, alegere, nume_fisier;	// mesajul trimis
+  string msg, msg2, alegere, nume_fisier;
   int funct , port;
   char msg_receive[100000];
 
-  /* exista toate argumentele in linia de comanda? */
   if (argc != 3)
   {
     printf ("Sintaxa: %s <adresa_server> <port>\n", argv[0]);
     return -1;
   }
 
-  /* stabilim portul */
   port = atoi (argv[2]);
 
   /* cream socketul */
@@ -41,11 +39,12 @@ int main (int argc, char *argv[])
   }
 
   while(1)
-  {
+  { 
+    funct = 0;
     cout << "[1] adaugare de aplicatie in baza de date.\n";
     cout << "[2] cautare de aplicatie in baza de date. \n";
     cout << "[3] inchidere sesiune client. \n\n";
-    cout << "\nIntroduceti cifra corespunzatoare comnenzii pe care doriti sa o folositi: \n";
+    cout << "\nIntroduceti cifra corespunzatoare comnenzii pe care doriti sa o folositi: ";
     cin >> funct;
     cin.ignore();       // flush the new line chr out of the buffer
 
@@ -66,7 +65,6 @@ int main (int argc, char *argv[])
       msg.clear();
 
       msg = receive_msg( sd );
-      //cout << "[client]Mesajul primit este: \n[server]" << msg << endl;
       msg.clear();
       msg2.clear();
       cout << "[client]Introduceti specificatiile aici:\n";
@@ -154,7 +152,6 @@ int main (int argc, char *argv[])
         send_msg ( msg , sd );
         send_msg ( msg2, sd );
 
-
         alegere.clear();
         cout << endl << "Doriti sa adaugati si versiuni?[da/nu]";
         getline( cin , alegere );
@@ -181,7 +178,22 @@ int main (int argc, char *argv[])
             }
             send_msg ( msg , sd );
             send_msg ( msg2, sd );
-            // to do - add kit install
+
+            cout << endl << "Doriti sa adaugati si un kit de instalare?\n";
+            cout << "Daca da, introduceti numele fisierului, \"nu\", altfel: ";
+            fflush(stdout);
+            nume_fisier.clear();
+            getline( cin, nume_fisier );
+
+            if( nume_fisier.empty() == 1 )
+              nume_fisier = "nu";
+
+            send_msg( nume_fisier , sd );
+
+            if( nume_fisier != "nu" )
+            {
+              send_file_to_server( sd , nume_fisier );
+            }
 
             cout << endl << "Doriti sa mai adaugati si alte versiuni?[da/nu]";
             alegere.clear();
@@ -201,7 +213,6 @@ int main (int argc, char *argv[])
       msg.clear();
 
       msg = receive_msg( sd );
-      //cout << "[client]Mesajul primit este: \n[server]" << msg << endl;
       fflush(stdout);
       msg.clear();
 
