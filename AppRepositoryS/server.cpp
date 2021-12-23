@@ -1,10 +1,5 @@
 #include "libraries.h"
-
-/* portul folosit */
 #define PORT 2024
-
-/* codul de eroare returnat de anumite apeluri */
-
 
 void sighandler(int sig)
 {
@@ -23,10 +18,9 @@ int main ()
         return 0;
     }
 
-
 	struct sockaddr_in server;	// structura folosita de server
 	struct sockaddr_in from;	
-	string msg, msg2, sql, sql2, copy_msg, id_app, alegere;		//mesajul primit de la client 
+	string msg, msg2, sql, sql2, copy_msg, id_app, id_kit, alegere, msg3;		//mesajul primit de la client 
 	int sd;			//descriptorul de socket 
 
 
@@ -160,16 +154,46 @@ int main ()
 								{
 									break;
 								}
-								// to do - receive kit install
 
-								msg = "id_app," + msg;
-								msg2 = id_app + "," + msg2;
-								sql.clear();
-								sql = "INSERT INTO OS_Version(" + msg + ") VALUES(" + msg2 + ");";
-								insert_sql( sql , db );
+								msg3.clear();
+								msg3 = receive_msg( client );
 
-								alegere.clear();
-								alegere = receive_msg( client );
+								if( msg3 != "nu")
+								{
+									string path;
+									path.clear();
+									path =  receive_file_from_client( client , db );
+
+									if( path != "-" )
+									{
+										id_kit.clear();
+										id_kit = return_max_id_kit(db);
+										msg = "id_app," + msg + " , id_kit , kit_install ";
+										msg2 = id_app + "," + msg2 + "," + id_kit + ", \"" + path +"\""; 
+										sql.clear();
+										sql = "INSERT INTO OS_Version(" + msg + ") VALUES(" + msg2 + ");";
+										insert_sql( sql , db );
+
+										alegere.clear();
+										alegere = receive_msg( client );
+									}
+									else
+									{
+										alegere.clear();
+										alegere = receive_msg( client );
+									}
+								}
+								else
+								{
+									msg = "id_app," + msg;
+									msg2 = id_app + "," + msg2;
+									sql.clear();
+									sql = "INSERT INTO OS_Version(" + msg + ") VALUES(" + msg2 + ");";
+									insert_sql( sql , db );
+
+									alegere.clear();
+									alegere = receive_msg( client );
+								}
 							}while( alegere == "da" );
 
 

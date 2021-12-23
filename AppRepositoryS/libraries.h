@@ -147,6 +147,35 @@ string return_id_app( string conditie_select , sqlite3* db)
     return id_app;
 } 
 
+string return_max_id_kit(sqlite3* db)
+{
+    char* zErrMsg; // mesaju de eroare
+    char str[1024]; // primul argument din callback
+    string result, sql;
+
+    str[0]=0;
+    result.clear();
+    sql = "SELECT MAX(id_kit)+1 FROM OS_Version;";
+    int rc = sqlite3_exec( db , sql.c_str() , callback , str , &zErrMsg );
+    if (rc != SQLITE_OK)
+    {
+        result = zErrMsg;
+        cout << result;
+        sqlite3_free (zErrMsg);
+        return 0;
+    }
+    else
+    {
+        str[strlen(str)-1]='\0';
+        result = str;
+    }
+
+    int poz = result.find('=');
+    string id_kit = result.substr(poz+1,result.length()-poz-2);
+
+    return id_kit;
+}
+
 tuple<string,string> read_for_apprepo()
 {
     string cauta, insert, buff;
@@ -492,3 +521,85 @@ int receive_file_from_server( int fd )
 
     return 1;
 }
+
+int send_file_to_server( int fd , string filename )
+{
+    int pos = filename.find(".");
+    string extensie = filename.substr(pos + 1);
+    extensie[extensie.length()] = '\0';
+
+    send_msg( extensie , fd );
+
+    FILE *fp;
+    fp = fopen(filename.c_str(), "rb");
+
+    if(fp == NULL)
+    {
+        perror("[-]Error in reading file.");
+        exit(1);
+    }
+
+    while(1)
+    {
+        unsigned char buff[1024]={0};
+        int nread = fread(buff,1,1024,fp);
+
+        if( nread > 0 )
+        {
+            write( fd , buff , nread );
+        }
+
+        if( nread < 1024 )
+        {
+            if( feof(fp) )
+            {
+                break;
+            }
+            if(ferror(fp))
+            {
+                return 0;
+            }        
+        }
+    }
+
+    fclose(fp);
+
+    return 1;
+}
+
+string receive_file_from_client( int fd , sqlite3* db )
+{
+    string name_app = "apps/" + return_max_id_kit(db);
+    string extensie;
+
+    extensie = receive_msg( fd );
+    name_app = name_app + "." + extensie;
+
+    FILE *fp;
+    fp = fopen( name_app.c_str() , "ab" );
+
+    if(NULL == fp)
+    {
+        return "-";
+    }
+
+    int bytesReceived = 0;
+    char recvBuff[1024];
+    bzero(recvBuff , 1024 );
+
+    while ( (bytesReceived = read(fd, recvBuff, 1024)) > 0 )
+    {
+        fwrite(recvBuff, 1, bytesReceived, fp);
+        if(bytesReceived < 1024)
+            break;
+    }
+
+    if(bytesReceived < 0)
+    {
+        return "-";
+    }
+
+    fclose(fp);
+
+    return name_app;
+} 
