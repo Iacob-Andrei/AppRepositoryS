@@ -313,7 +313,7 @@ int main ()
 
 					msg.clear();
 					msg = select_sql( sql , db );
-					send_msg(msg , client );
+					send_msg( msg , client );
 
 
 					alegere.clear();

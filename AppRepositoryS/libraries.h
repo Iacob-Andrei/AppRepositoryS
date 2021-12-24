@@ -23,7 +23,6 @@ void send_integer( int value , int fd )
     if ( write (fd, &value, sizeof(int)) <= 0)
     {
         perror ("[client]Eroare la write() spre server.\n");
-        //return errno;
     }
 }
 
@@ -35,19 +34,19 @@ void send_msg ( string mesaj , int fd )
     if ( write ( fd , mesaj.c_str() , lungime ) <= 0 )
     {
         perror ("[client]Eroare la write() spre server.\n");
-        //return errno;
     }
 }
 
 string receive_msg( int fd )
 {
     int length;
-    char mesaj_chr[100000];
-    bzero(mesaj_chr,100000);
 
     read ( fd, &length, sizeof(int));
+    char mesaj_chr[length];
+    bzero(mesaj_chr,length);
     read ( fd, mesaj_chr, length );
-    string mesaj = mesaj_chr;
+    string mesaj;
+    mesaj = string( mesaj_chr , length );
 
     return mesaj;
 }
@@ -434,19 +433,19 @@ string read_for_search()
 int send_file_to_client( int fd , string id_app , sqlite3* db )
 {
     string sql = "SELECT kit_install FROM OS_Version WHERE id_kit = " + id_app + ";";
-    int pos;
+    int pos, nread;
     string filename;
     filename.clear();
     filename = select_sql( sql , db );
 
+    filename.pop_back();
+
     pos = filename.find("=");
     filename = filename.substr(pos + 1);
-    filename[filename.length() - 1] = '\0';
 
     pos = filename.find(".");
     string extensie = filename.substr(pos + 1);
-    string name_for_client;
-    name_for_client = id_app + "." + extensie;
+    string name_for_client = id_app + "." + extensie;
 
     send_msg( name_for_client , fd );
 
@@ -461,15 +460,16 @@ int send_file_to_client( int fd , string id_app , sqlite3* db )
 
     while(1)
     {
-        unsigned char buff[1024]={0};
-        int nread = fread(buff,1,1024,fp);
+        char buff[512];
+        bzero( buff , 512);
+        nread = fread(buff,1,512,fp);
 
         if( nread > 0 )
         {
             write( fd , buff , nread );
         }
 
-        if( nread < 1024 )
+        if( nread < 512 )
         {
             if( feof(fp) )
             {
@@ -489,12 +489,11 @@ int send_file_to_client( int fd , string id_app , sqlite3* db )
 int receive_file_from_server( int fd )
 {
     string name_app;
-
     name_app.clear();
     name_app = receive_msg( fd );
 
     FILE *fp;
-    fp = fopen( name_app.c_str() , "ab" );
+    fp = fopen( name_app.c_str() , "wb" );
 
     if(NULL == fp)
     {
@@ -502,13 +501,15 @@ int receive_file_from_server( int fd )
     }
 
     int bytesReceived = 0;
-    char recvBuff[1024];
-    bzero(recvBuff , 1024 );
+    char recvBuff[512];
+    bzero(recvBuff , 512 );
 
-    while ( (bytesReceived = read(fd, recvBuff, 1024)) > 0 )
+    while ( (bytesReceived = read(fd, recvBuff, 512)) > 0 )
     {
         fwrite(recvBuff, 1, bytesReceived, fp);
-        if(bytesReceived < 1024)
+        cout << "Am primit " << bytesReceived << endl;
+
+        if(bytesReceived < 512)
             break;
     }
 
@@ -536,20 +537,21 @@ int send_file_to_server( int fd , string filename )
     if(fp == NULL)
     {
         perror("[-]Error in reading file.");
-        exit(1);
+        return 0;
     }
 
+    char buff[512];
     while(1)
     {
-        unsigned char buff[1024]={0};
-        int nread = fread(buff,1,1024,fp);
+        bzero(buff, 512);
+        int nread = fread(buff,1,512,fp);
 
         if( nread > 0 )
         {
             write( fd , buff , nread );
         }
 
-        if( nread < 1024 )
+        if( nread < 512 )
         {
             if( feof(fp) )
             {
@@ -580,26 +582,28 @@ string receive_file_from_client( int fd , sqlite3* db )
 
     if(NULL == fp)
     {
+        cout << "Eroare!\n";
         return "-";
     }
 
     int bytesReceived = 0;
-    char recvBuff[1024];
-    bzero(recvBuff , 1024 );
+    char recvBuff[512];
+    bzero(recvBuff , 512 );
 
-    while ( (bytesReceived = read(fd, recvBuff, 1024)) > 0 )
+    while ( (bytesReceived = read(fd, recvBuff, 512)) > 0 )
     {
         fwrite(recvBuff, 1, bytesReceived, fp);
-        if(bytesReceived < 1024)
+        if(bytesReceived < 512 )
             break;
     }
 
     if(bytesReceived < 0)
     {
+        cout << "[server]Eroare la primire fisier!\n";
         return "-";
     }
 
     fclose(fp);
-
+    cout << "Fisier primit cu succes!\n";
     return name_app;
 } 

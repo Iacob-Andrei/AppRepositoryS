@@ -119,7 +119,10 @@ int main (int argc, char *argv[])
 
             if( nume_fisier != "nu" )
             {
-              send_file_to_server( sd , nume_fisier );
+              if ( send_file_to_server( sd , nume_fisier ) == 1 )
+                cout << "[client]Fisier trimis cu succes!\n";
+              else
+                cout << "[client]Eroare la trimitere fisier!\n";
             }
 
             cout << endl << "Doriti sa mai adaugati si alte versiuni?[da/nu]";
@@ -221,7 +224,6 @@ int main (int argc, char *argv[])
       string cautare = read_for_search();
       if( cautare.empty() == 1 )
         cautare = "-";
-      cout << cautare << endl;
 
       send_msg( cautare , sd );
       msg.clear();
