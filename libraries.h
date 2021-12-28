@@ -43,10 +43,19 @@ string receive_msg( int fd )
 {
     int length;
 
-    read ( fd, &length, sizeof(int));
+    if( read ( fd, &length, sizeof(int)) <= 0 )
+    {
+        return "error";
+    }
+
     char mesaj_chr[length];
     bzero(mesaj_chr,length);
-    read ( fd, mesaj_chr, length );
+
+    if( read ( fd, mesaj_chr, length ) <= 0  )
+    {
+        return "error";
+    }
+
     string mesaj;
     mesaj = string( mesaj_chr , length );
 

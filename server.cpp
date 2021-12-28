@@ -98,12 +98,11 @@ int main ()
 				msg.clear();
 				int funct = 0;
 
-				/* citirea mesajului */
 				if (read (client, &funct, sizeof(int)) <= 0)
 				{
-					perror ("[server]Eroare la read() de la client.\n");
-					close (client);	/* inchidem conexiunea cu clientul */
-					continue;		/* continuam sa ascultam */
+					cout << "[server]Eroare la read() de la client. Inchid conexiunea!\n";
+					close (client);	
+					exit(1);	
 				}
 			
 				cout << "[server]Am primit comanda nr: " << funct << endl;
