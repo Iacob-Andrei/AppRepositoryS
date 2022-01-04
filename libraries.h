@@ -24,7 +24,8 @@ void send_integer( int value , int fd )
 {
     if ( write (fd, &value, sizeof(int)) <= 0)
     {
-        perror ("[client]Eroare la write() spre server.\n");
+        cout << "[client]Eroare la write() spre server.\n";
+        exit(0);
     }
 }
 
@@ -35,7 +36,8 @@ void send_msg ( string mesaj , int fd )
 
     if ( write ( fd , mesaj.c_str() , lungime ) <= 0 )
     {
-        perror ("[client]Eroare la write() spre server.\n");
+        cout << "[client]Eroare la write() spre server.\n";
+        exit(0);
     }
 }
 
