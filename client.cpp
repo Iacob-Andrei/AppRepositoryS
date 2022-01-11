@@ -6,7 +6,6 @@ int main (int argc, char *argv[])
   struct sockaddr_in server;	// structura folosita pentru conectare 
   string msg, msg2, alegere, nume_fisier;
   int funct , port, cod;
-  char msg_receive[100000];
 
   if (argc != 3)
   {
